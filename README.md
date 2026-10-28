@@ -6,7 +6,7 @@ Built for and tested on a **Samsung UE50AU7022KXXH** (2021 Crystal UHD, Tizen 6.
 
 ![The start screen: neon clock with seconds, five glowing platform tiles, three corner shortcuts on a dark circuit-board background](docs/images/screenshot.png)
 
-<sub>Rendered at the TV's 1920×1080 from the app files with `scripts/render-screenshot.ps1`.</sub>
+<sub>Rendered at the TV's 1920×1080.</sub>
 
 ## Features
 
@@ -18,36 +18,31 @@ Built for and tested on a **Samsung UE50AU7022KXXH** (2021 Crystal UHD, Tizen 6.
 - **Blue** button opens a diagnostics page (log + lifecycle history that survives restarts).
 - No Samsung account, no network calls, no tracking — fonts and logos are bundled. Nothing on the TV is modified.
 
-## Limitations (Tizen 6, public privileges)
-
-Self-installed apps only get *public* privileges, which sets hard limits. Details and evidence in [docs/findings.md](docs/findings.md).
-
-- **It can't open by itself at power-on.** Samsung's *Autorun Last App* ignores sideloaded apps (verified). Open it from the Home row instead.
-- **The Home button always opens Samsung's home** — it can't be intercepted.
-- **No direct input switching** (HDMI / antenna / USB) — use Samsung's Source menu as usual.
-- Leaving an app with Back returns to Samsung's home, not to this screen.
-
 ## Requirements
 
 - Samsung Tizen TV in **Developer Mode**, with *Host PC IP* set to your PC.
-- Windows PC on the same network with the official **Tizen CLI** (`C:\tizen-studio`) and a Tizen author certificate.
+- Windows PC on the same network with the official **Tizen CLI** (part of Tizen Studio) and a Tizen author certificate.
 
-One-time setup, step by step: **[docs/setup.md](docs/setup.md)**.
+## Install
 
-## Usage
+1. Do the one-time setup in **[docs/setup.md](docs/setup.md)**: Developer Mode on the TV, the Tizen CLI, a certificate, and your TV's address in `scripts/tv.config.ps1`.
+2. Build the app, install it on the TV and open it:
 
-All scripts are PowerShell and read your TV address and signing profile from `scripts/tv.config.ps1` (git-ignored; copy it from `scripts/tv.config.example.ps1`).
+   ```powershell
+   .\scripts\deploy.ps1
+   ```
 
-| Command | What it does |
-|---|---|
-| `.\scripts\deploy.ps1` | Build, install on the TV and open the app |
-| `.\scripts\deploy.ps1 -NoRun` | Build and install without opening it |
-| `.\scripts\build.ps1` | Package `app/` into a signed `dist/Start.wgt` |
-| `.\scripts\uninstall.ps1` | Remove the app from the TV |
-| `.\scripts\list-apps.ps1 [-Filter netflix]` | List app IDs installed on the TV |
-| `.\scripts\debug.ps1` | Open the app in debug mode and forward DevTools to `127.0.0.1:9333` |
-| `.\scripts\cdp-eval.ps1 -Expr "<js>"` | Run JavaScript inside the app (after `debug.ps1`) |
-| `.\scripts\render-screenshot.ps1` | Render the app at 1920×1080 in headless Edge to `docs/images/screenshot.png` |
+   Run it again after any change to update the app on the TV.
+
+## Uninstall
+
+```powershell
+.\scripts\uninstall.ps1
+```
+
+Or on the TV: **Apps → Start → Delete**.
+
+To also undo the setup, switch Developer Mode off on the TV (Apps → **123** pad → `12345` → **Off** → restart the TV) and uninstall Tizen Studio from the PC.
 
 ## Customising tiles
 
@@ -57,7 +52,7 @@ Buttons live in [`app/js/tiles.js`](app/js/tiles.js) — `PLATFORMS` for the doc
 { label: 'YouTube', logo: 'youtube', id: '9Ur5IzDKqV.TizenYouTube', neon: '#ff2d55' },
 ```
 
-To add an app, find its ID with `.\scripts\list-apps.ps1 -Filter <name>`, add a line (with a logo in [`app/js/logos.js`](app/js/logos.js)), and run `.\scripts\deploy.ps1`. `neon` is the tile's border and glow colour.
+To add an app, add a line with its app ID (app IDs differ between TV models; the `scripts` folder has a helper that lists the ones on your TV) and a logo in [`app/js/logos.js`](app/js/logos.js), then run `.\scripts\deploy.ps1`. `neon` is the tile's border and glow colour.
 
 ## Project structure
 
@@ -76,12 +71,6 @@ scripts/             build / deploy / debug tooling (PowerShell)
 docs/setup.md        one-time setup: Developer Mode, Tizen CLI, certificate
 docs/findings.md     what works on Tizen 6 and what doesn't, with evidence
 ```
-
-## Removing everything
-
-1. `.\scripts\uninstall.ps1` (or on the TV: Apps → Start → Delete).
-2. TV: Apps → **123** pad → `12345` → Developer Mode **Off** → restart the TV.
-3. PC: delete `C:\tizen-studio` and `C:\tizen-studio-data`.
 
 ## Credits
 
