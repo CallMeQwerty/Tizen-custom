@@ -37,6 +37,23 @@ IDs differ between model years — run `scripts/list-apps.ps1` on another TV.
 - **No DevTools screenshots:** the TV's web engine answers `Runtime` and `Page.enable`, but never answers `Page.captureScreenshot` (verified, with and without `fromSurface`). Screenshots are rendered on the PC instead (`scripts/render-screenshot.ps1`).
 - **App list is slow:** `tizen.application.getAppsInfo()` returns 368 apps in ~4.3 s on this TV, so tiles use hard-coded IDs and the list is only fetched by `list-apps.ps1`.
 
+## Performance on this TV
+
+Measured in the app with `requestAnimationFrame` timing while simulating arrow presses (v0.5.0 → v0.5.1):
+
+| | Before | After |
+|---|---|---|
+| Key press → screen updated | 200–290 ms | 25–36 ms |
+| Frames while navigating | avg 72 ms (~14 fps) | avg 15.5 ms (60 fps) |
+| Clock tick, idle | ~115 ms freeze every second | none (max frame 19 ms) |
+
+Switching effects off one at a time showed:
+
+- **Scaling the selected tile was the main cost.** On this engine a `scale()` makes the layer redraw everything in it, blurred glows included, even with `will-change: transform`. A pure 2D `translate()` is cheap.
+- Blurred `text-shadow` glow on a 200 px clock costs ~100 ms per redraw, even for a single digit on its own layer. Pre-rendering the glyphs into canvas sprites removes the cost.
+- Changing `box-shadow` glows on focus is expensive. Fading a pre-drawn overlay's `opacity` is not.
+- `filter: drop-shadow` on the logos and the base tile glow cost little once nothing around them changes.
+
 ## Signing
 
 - A plain **Tizen** author certificate (default Tizen distributor) installs fine on Tizen 6. Tizen 7+ TVs require a **Samsung** certificate (Samsung account) — per TizenBrew/Apps2Samsung source code.

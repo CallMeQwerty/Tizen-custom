@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.1 — 2026-10-28
+
+Faster navigation, measured on the TV: a key press now reaches the screen in **25–36 ms** at a steady 60 fps (was 200–290 ms at ~14 fps), and the clock no longer freezes the screen for ~115 ms every second.
+
+- The selected tile lifts but no longer grows: scaling made this TV redraw the whole glowing tile on every move. Shortcuts no longer grow either.
+- Focus ring and glow are drawn once per tile and only faded in and out.
+- Tiles and labels sit on their own layers.
+- The clock's glowing digits are drawn once into sprites at start-up; each tick only copies them onto a canvas.
+- The focus position is saved when you stop moving, not on every key press.
+- Animations shortened from 0.18 s to 0.12 s.
+
 ## 0.5.0 — 2026-10-28
 
 - Cyberpunk redesign for a dark room (the white background was too bright on the TV):
