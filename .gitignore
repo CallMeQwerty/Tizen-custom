@@ -1,0 +1,24 @@
+# Build output
+dist/
+*.wgt
+
+# Tizen packaging artefacts (created when packaging in place)
+author-signature.xml
+signature1.xml
+.manifest.tmp
+.buildResult/
+
+# Local machine config (TV IP, signing profile)
+scripts/tv.config.ps1
+
+# Certificates and keys - never commit
+*.p12
+*.pwd
+*.cer
+*.pem
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
