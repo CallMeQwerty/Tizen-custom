@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.5.0';
+  var VERSION = '0.5.1';
   var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 10009, BLUE: 406, ESC: 27 };
   var hasTizen = typeof tizen !== 'undefined';
 
@@ -20,7 +20,6 @@
   };
   var row = 'dock';
 
-  var digitEls = [];
   var logLines = [];
   var startedAt = new Date();
   var resumes = 0;
@@ -61,22 +60,78 @@
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
                 'September', 'October', 'November', 'December'];
 
-  function buildClock() {
-    var html = '';
-    for (var i = 0; i < 6; i++) {
-      if (i === 2 || i === 4) html += '<span class="col' + (i === 4 ? ' sec' : '') + '">:</span>';
-      html += '<span class="dg' + (i >= 4 ? ' sec' : '') + '">0</span>';
-    }
-    timeEl.innerHTML = html;
-    digitEls = timeEl.querySelectorAll('.dg');
+  // The glowing digits are expensive to draw (two large blurred glows each), too slow
+  // for the TV to redo every second. So each character is drawn once into a sprite at
+  // start-up, and a tick only copies eight finished sprites onto the clock canvas.
+  var CLOCK_FONT = '600 200px Rajdhani';
+  var CELL = 110;  // digit slot, 0.55em: wider than the widest digit, so nothing shifts
+  var COLON = 48;  // colon slot, 0.24em
+  var LINE = 200;  // line height
+  var GLOW = 70;   // room around each glyph for its glow
+  var CLOCK_STYLES = {
+    main: { fill: '#ffffff', glow: '#ff2975', blurs: [50, 17] },
+    sec: { fill: '#2de2e6', glow: '#2de2e6', blurs: [45, 17] }
+  };
+  var sprites = {};
+  var clockCtx = null;
+  var shownDigits = '';
+
+  function makeSprite(ch, style) {
+    var canvas = document.createElement('canvas');
+    canvas.width = (ch === ':' ? COLON : CELL) + GLOW * 2;
+    canvas.height = LINE + GLOW * 2;
+    var ctx = canvas.getContext('2d');
+    var x = canvas.width / 2;
+    var y = GLOW + LINE / 2 + 12 + (ch === ':' ? -10 : 0); // +12: matches where the DOM text sat
+    ctx.font = CLOCK_FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = style.fill;
+    ctx.shadowColor = style.glow;
+    style.blurs.forEach(function (blur) {
+      ctx.shadowBlur = blur;
+      ctx.fillText(ch, x, y);
+    });
+    ctx.shadowBlur = 0;
+    ctx.fillText(ch, x, y);
+    return canvas;
   }
 
-  // Only touches the digits that changed.
+  function buildClock() {
+    var canvas = document.createElement('canvas');
+    canvas.width = CELL * 6 + COLON * 2 + GLOW * 2;
+    canvas.height = LINE + GLOW * 2;
+    canvas.style.top = -GLOW + 'px';
+    canvas.style.marginLeft = -canvas.width / 2 + 'px';
+    timeEl.appendChild(canvas);
+
+    document.fonts.load(CLOCK_FONT).then(function () {
+      Object.keys(CLOCK_STYLES).forEach(function (name) {
+        sprites[name] = {};
+        '0123456789:'.split('').forEach(function (ch) { sprites[name][ch] = makeSprite(ch, CLOCK_STYLES[name]); });
+      });
+      clockCtx = canvas.getContext('2d');
+      tick();
+    });
+  }
+
+  // hh : mm : ss — the second colon and the seconds use the cyan style.
+  function drawTime(digits) {
+    var chars = [digits[0], digits[1], ':', digits[2], digits[3], ':', digits[4], digits[5]];
+    var x = 0;
+    clockCtx.clearRect(0, 0, clockCtx.canvas.width, clockCtx.canvas.height);
+    chars.forEach(function (ch, i) {
+      clockCtx.drawImage((i >= 5 ? sprites.sec : sprites.main)[ch], x, 0);
+      x += ch === ':' ? COLON : CELL;
+    });
+  }
+
   function tick() {
     var d = new Date();
     var digits = pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
-    for (var i = 0; i < 6; i++) {
-      if (digitEls[i].textContent !== digits.charAt(i)) digitEls[i].textContent = digits.charAt(i);
+    if (clockCtx && digits !== shownDigits) {
+      drawTime(digits);
+      shownDigits = digits;
     }
     var date = DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
     if (dateEl.textContent !== date) dateEl.textContent = date;
@@ -115,14 +170,26 @@
     });
   }
 
+  var focusedEl = null;
+  var saveTimer = null;
+
+  function saveFocus() {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    try { localStorage.setItem('focus', row + ':' + rows[row].index); } catch (e) { /* storage unavailable */ }
+  }
+
   function focusOn(name, index) {
     var r = rows[name];
     index = Math.max(0, Math.min(r.items.length - 1, index));
-    rows.dock.els.concat(rows.top.els).forEach(function (el) { el.classList.remove('focus'); });
+    if (focusedEl) focusedEl.classList.remove('focus');
     row = name;
     r.index = index;
-    r.els[index].classList.add('focus');
-    try { localStorage.setItem('focus', name + ':' + index); } catch (e) { /* storage unavailable */ }
+    focusedEl = r.els[index];
+    focusedEl.classList.add('focus');
+    // Saving is a write to the TV's storage: do it once the user stops moving, not on every key press.
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveFocus, 1500);
   }
 
   function restoreFocus() {
@@ -136,6 +203,7 @@
   // ---- launching ---------------------------------------------------------
 
   function open(item) {
+    saveFocus();
     if (!hasTizen) { toast('Preview: would open ' + item.label); return; }
     toast('Opening ' + item.label + '…');
     log('launch ' + item.id);
@@ -218,7 +286,7 @@
   });
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) { log('hidden'); remember('hidden'); return; }
+    if (document.hidden) { saveFocus(); log('hidden'); remember('hidden'); return; }
     resumes++;
     log('resumed');
     remember('resumed');

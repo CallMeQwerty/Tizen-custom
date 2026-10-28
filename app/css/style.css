@@ -35,31 +35,18 @@ html, body {
   will-change: transform; /* own layer: the ticking seconds don't repaint the background */
 }
 
+/* The time is a canvas (see buildClock in main.js): its glowing digits are drawn once
+   into sprites at start-up, because blurring the glow on every tick was too slow for
+   the TV. This box keeps the 200px line the digits sit on; the canvas overhangs it
+   by the glow padding. */
 #time {
-  font-size: 200px;
-  line-height: 1;
-  white-space: nowrap;
-  color: #ffffff;
-  text-shadow: 0 0 17px #ff2975, 0 0 50px #ff2975;
-}
-
-#time .dg {
-  display: inline-block;
-  width: 0.55em; /* fixed-width digits (widest Rajdhani digit is 0.533em): nothing shifts as the time changes */
-  text-align: center;
-}
-
-#time .col {
-  display: inline-block;
-  width: 0.24em;
-  text-align: center;
   position: relative;
-  top: -0.05em;
+  height: 200px;
 }
 
-#time .sec {
-  color: #2de2e6;
-  text-shadow: 0 0 17px #2de2e6, 0 0 45px #2de2e6;
+#time canvas {
+  position: absolute;
+  left: 50%;
 }
 
 #date {
@@ -86,10 +73,16 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center; /* tile and label share one centre line */
-  transition: transform 0.18s ease;
+  transition: transform 0.12s ease-out;
+  will-change: transform; /* own layer: the lift is moved by the GPU, not redrawn */
 }
 
+/* Performance: nothing that is expensive to draw (blurred glows, the glowing logos)
+   changes when the focus moves. The focus ring + glow is drawn once per tile in
+   ::after and only faded in and out; tiles and labels sit on their own layers. */
+
 .tile {
+  position: relative;
   width: 134px;
   height: 134px;
   box-sizing: border-box;
@@ -100,6 +93,22 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.tile::after { /* focus ring and glow, faded in when selected */
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 34px;
+  border: 4px solid #ffffff;
+  box-shadow: 0 0 34px var(--c), 0 0 76px var(--c);
+  opacity: 0.01; /* not 0: keeps it drawn from start-up, so the first focus doesn't have to draw it */
+  transition: opacity 0.12s ease-out;
+  will-change: opacity;
+  pointer-events: none;
 }
 
 .tile svg {
@@ -130,15 +139,17 @@ html, body {
   font-size: 30px;
   letter-spacing: 1.5px;
   color: #2de2e6;
+  will-change: transform; /* own layer: its colour change doesn't repaint the tile */
 }
 
 .btn.focus {
-  transform: translateY(-14px) scale(1.1);
+  /* Lift only. Scaling made this TV redraw the whole glowing tile on every move
+     (~200-300 ms per key press); a pure 2D move is ~30 ms. */
+  transform: translate(0, -14px);
 }
 
-.btn.focus .tile {
-  border-color: #ffffff;
-  box-shadow: 0 0 34px var(--c), 0 0 76px var(--c);
+.btn.focus .tile::after {
+  opacity: 1;
 }
 
 .btn.focus .cap {
@@ -158,10 +169,10 @@ html, body {
 .sc {
   position: relative;
   margin-left: 30px;
-  transition: transform 0.18s ease;
 }
 
 .sc .ring {
+  position: relative;
   width: 78px;
   height: 78px;
   box-sizing: border-box;
@@ -173,6 +184,22 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.sc .ring::after { /* focus ring and glow, faded in when selected */
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  border: 4px solid #ffffff;
+  box-shadow: 0 0 30px #2de2e6, 0 0 60px #2de2e6;
+  opacity: 0.01; /* not 0: keeps it drawn from start-up */
+  transition: opacity 0.12s ease-out;
+  will-change: opacity;
+  pointer-events: none;
 }
 
 .sc .ring svg {
@@ -190,16 +217,12 @@ html, body {
   letter-spacing: 2px;
   color: #2de2e6;
   opacity: 0;
+  transition: opacity 0.12s ease-out;
+  will-change: opacity;
 }
 
-.sc.focus {
-  transform: scale(1.15);
-}
-
-.sc.focus .ring {
-  border-color: #ffffff;
-  color: #ffffff;
-  box-shadow: 0 0 30px #2de2e6, 0 0 60px #2de2e6;
+.sc.focus .ring::after {
+  opacity: 1;
 }
 
 .sc.focus .cap {
