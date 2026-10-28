@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.0';
+  var VERSION = '0.5.0';
   var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 10009, BLUE: 406, ESC: 27 };
   var hasTizen = typeof tizen !== 'undefined';
 
@@ -94,11 +94,8 @@
     PLATFORMS.forEach(function (p, i) {
       var el = document.createElement('div');
       el.className = 'btn';
-      el.innerHTML = '<div class="rim"><div class="face">' + LOGOS[p.logo] + '</div></div><div class="cap"></div>';
-      var face = el.querySelector('.face');
-      face.style.setProperty('--l', p.face[0]);
-      face.style.setProperty('--c', p.face[1]);
-      face.style.setProperty('--d', p.face[2]);
+      el.style.setProperty('--c', p.neon);
+      el.innerHTML = '<div class="tile">' + LOGOS[p.logo] + '</div><div class="cap"></div>';
       el.querySelector('.cap').textContent = p.label;
       el.addEventListener('click', function () { focusOn('dock', i); open(p); });
       dockEl.appendChild(el);
@@ -110,7 +107,7 @@
     SHORTCUTS.forEach(function (s, i) {
       var el = document.createElement('div');
       el.className = 'sc';
-      el.innerHTML = '<div class="ring"><div class="disc">' + LOGOS[s.logo] + '</div></div><div class="cap"></div>';
+      el.innerHTML = '<div class="ring">' + LOGOS[s.logo] + '</div><div class="cap"></div>';
       el.querySelector('.cap').textContent = s.label;
       el.addEventListener('click', function () { focusOn('top', i); open(s); });
       shortcutsEl.appendChild(el);
@@ -232,7 +229,8 @@
 
   log('start v' + VERSION + ' (' + (hasTizen ? 'TV' : 'browser') + ')');
   remember('start v' + VERSION);
-  drawBackground(document.getElementById('bg'), 7);
+  var bg = drawBackground(document.getElementById('bg'), 11);
+  log('background: ' + bg.hexagons + ' hexagons');
   buildClock();
   buildDock();
   buildShortcuts();

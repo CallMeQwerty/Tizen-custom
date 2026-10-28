@@ -1,14 +1,22 @@
-// Low-poly "pearl" background: white facets with gold facets gathering in the corners.
-// Drawn once onto a canvas at start-up; seeded, so it looks the same every time.
+// Dark circuit-board background: neon traces along the left and right edges and
+// scattered dark-grey hexagon outlines. Drawn once onto a canvas at start-up;
+// seeded, so it looks the same every time.
 (function () {
   'use strict';
 
   var W = 1920;
   var H = 1080;
-  var GOLD_LIGHT = [250, 232, 176];
-  var GOLD_DARK = [176, 128, 40];
-  var WHITE_LIGHT = [255, 255, 255];
-  var WHITE_DARK = [233, 234, 236];
+  var CYAN = '#2de2e6';
+  var MAGENTA = '#ff2975';
+  var EDGE = 260; // traces never reach further than this from the side edges
+
+  // Areas no hexagon may touch (measured on the TV, plus room for glow and the focus lift):
+  // clock digits 353-1567 x 150-435, dock 337-1573 x 728-987, shortcuts 1496-1820 x 60-138.
+  var KEEP_CLEAR = [
+    { x: 300, y: 110, w: 1320, h: 360 },
+    { x: 300, y: 690, w: 1320, h: 390 },
+    { x: 1460, y: 20, w: 460, h: 190 }
+  ];
 
   function rng(seed) {
     return function () {
@@ -20,70 +28,131 @@
     };
   }
 
-  function mix(a, b, t) {
-    return 'rgb(' + [0, 1, 2].map(function (i) { return Math.round(a[i] + (b[i] - a[i]) * t); }).join(',') + ')';
+  // True if a circle of radius r at (x, y) touches the box.
+  function touches(x, y, r, box) {
+    var nx = Math.max(box.x, Math.min(x, box.x + box.w));
+    var ny = Math.max(box.y, Math.min(y, box.y + box.h));
+    return Math.hypot(x - nx, y - ny) < r;
   }
 
-  function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+  function drawBase(ctx) {
+    var glow = ctx.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.45, W * 0.7);
+    glow.addColorStop(0, '#0a0d1d');
+    glow.addColorStop(1, '#020308');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = '#1b2340';
+    for (var x = 0; x <= W; x += 48) {
+      for (var y = 0; y <= H; y += 48) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function hexPath(ctx, cx, cy, r) {
+    ctx.beginPath();
+    for (var k = 0; k < 6; k++) {
+      var a = Math.PI / 180 * (60 * k - 30);
+      var px = cx + r * Math.cos(a);
+      var py = cy + r * Math.sin(a);
+      if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  // Random sizes and positions, never overlapping each other.
+  function drawHexagons(ctx, rand) {
+    var placed = [];
+    for (var tries = 0; tries < 3000 && placed.length < 28; tries++) {
+      var r = 26 + Math.pow(rand(), 1.6) * 100;
+      var x = rand() * W;
+      var y = rand() * H;
+      var blocked = KEEP_CLEAR.some(function (box) { return touches(x, y, r, box); }) ||
+        placed.some(function (p) { return Math.hypot(p.x - x, p.y - y) < p.r + r + 24; });
+      if (!blocked) placed.push({ x: x, y: y, r: r });
+    }
+
+    placed.forEach(function (h) {
+      hexPath(ctx, h.x, h.y, h.r);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.012)';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#2a2f3e';
+      ctx.stroke();
+      if (h.r > 55 && rand() < 0.45) {
+        hexPath(ctx, h.x, h.y, h.r * 0.68);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#1f2330';
+        ctx.stroke();
+      }
+    });
+    return placed.length;
+  }
+
+  // One trace: in from the edge, a 45-degree bend, a short run, an end pad.
+  function drawTrace(ctx, rand, fromRight, y, color) {
+    var dir = fromRight ? -1 : 1;
+    var x0 = fromRight ? W : 0;
+    var x1 = x0 + dir * (30 + rand() * 70);
+    var dy = (rand() < 0.5 ? -1 : 1) * (24 + rand() * 60);
+    var x2 = x1 + dir * Math.abs(dy);
+    var y2 = y + dy;
+    var x3 = x2 + dir * (20 + rand() * 60);
+    if (Math.abs(x3 - x0) > EDGE) x3 = x0 + dir * EDGE;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 16;
+    ctx.globalAlpha = 0.8;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x1, y);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x3, y2, 9, 0, Math.PI * 2);
+    ctx.fillStyle = '#05060f';
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x3, y2, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTraces(ctx, rand) {
+    for (var i = 0; i < 12; i++) {
+      drawTrace(ctx, rand, false, 60 + i * 84 + rand() * 30, rand() < 0.55 ? CYAN : MAGENTA);
+      var yRight = 60 + i * 84 + rand() * 30;
+      // Skip the top-right corner where the shortcuts sit.
+      if (yRight > 240) drawTrace(ctx, rand, true, yRight, rand() < 0.55 ? MAGENTA : CYAN);
+    }
+
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = CYAN;
+    ctx.fillRect(0, H - 20, W, 4);
+    ctx.restore();
+  }
 
   window.drawBackground = function (canvas, seed) {
     var ctx = canvas.getContext('2d');
-    var rand = rng(seed || 7);
-    var cols = 13;
-    var rows = 8;
-    var cw = W / cols;
-    var ch = H / rows;
-    var points = [];
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, W, H);
-
-    for (var r = 0; r <= rows; r++) {
-      points[r] = [];
-      for (var c = 0; c <= cols; c++) {
-        points[r][c] = [
-          c * cw + (c > 0 && c < cols ? (rand() - 0.5) * cw * 0.75 : 0),
-          r * ch + (r > 0 && r < rows ? (rand() - 0.5) * ch * 0.75 : 0)
-        ];
-      }
-    }
-
-    function triangle(a, b, d) {
-      var x = (a[0] + b[0] + d[0]) / 3;
-      var y = (a[1] + b[1] + d[1]) / 3;
-      var nx = (x / W - 0.5) * 2;
-      var ny = (y / H - 0.5) * 2;
-      var dist = Math.sqrt(nx * nx * 0.7 + ny * ny);
-      var light = clamp01(1 - (x / W * 0.3 + y / H * 0.35) + (rand() - 0.5) * 0.25);
-      var gold = rand() < clamp01((dist - 0.72) / 0.5) * 0.8;
-      var fill = gold ? mix(GOLD_DARK, GOLD_LIGHT, light) : mix(WHITE_DARK, WHITE_LIGHT, light * 0.9 + 0.1);
-
-      ctx.beginPath();
-      ctx.moveTo(a[0], a[1]);
-      ctx.lineTo(b[0], b[1]);
-      ctx.lineTo(d[0], d[1]);
-      ctx.closePath();
-      ctx.fillStyle = fill;
-      ctx.fill();
-      ctx.lineWidth = gold ? 1.5 : 1;
-      ctx.strokeStyle = gold ? '#f6dd93' : fill;
-      ctx.stroke();
-    }
-
-    for (var row = 0; row < rows; row++) {
-      for (var col = 0; col < cols; col++) {
-        var p00 = points[row][col];
-        var p01 = points[row][col + 1];
-        var p10 = points[row + 1][col];
-        var p11 = points[row + 1][col + 1];
-        if ((row + col) % 2) {
-          triangle(p00, p01, p10);
-          triangle(p01, p11, p10);
-        } else {
-          triangle(p00, p01, p11);
-          triangle(p00, p11, p10);
-        }
-      }
-    }
+    var rand = rng(seed || 11);
+    drawBase(ctx);
+    var hexagons = drawHexagons(ctx, rand);
+    drawTraces(ctx, rand);
+    return { hexagons: hexagons };
   };
 })();
