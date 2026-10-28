@@ -34,6 +34,7 @@ IDs differ between model years — run `scripts/list-apps.ps1` on another TV.
 - **Home key** can't be registered or intercepted by an app; it always opens Samsung's home.
 - **Back from a launched app** (e.g. YouTube) returns to Samsung's home, not to this app.
 - **Input switching:** `tizen.tvwindow` (public) can only show HDMI / tuner video *inside* an app; switching the TV's real input needs partner privileges. Not used here.
+- **No DevTools screenshots:** the TV's web engine answers `Runtime` and `Page.enable`, but never answers `Page.captureScreenshot` (verified, with and without `fromSurface`). Screenshots are rendered on the PC instead (`scripts/render-screenshot.ps1`).
 - **App list is slow:** `tizen.application.getAppsInfo()` returns 368 apps in ~4.3 s on this TV, so tiles use hard-coded IDs and the list is only fetched by `list-apps.ps1`.
 
 ## Signing

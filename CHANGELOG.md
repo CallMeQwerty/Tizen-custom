@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 — 2026-10-28
+
+- Cyberpunk redesign for a dark room (the white background was too bright on the TV):
+  - Near-black circuit-board background: cyan and magenta traces kept within 260 px of the side edges, 28 dark-grey hexagon outlines placed at random without overlapping each other or the clock, dock and shortcuts. Still drawn once on a canvas.
+  - Neon clock: white with a pink glow, cyan seconds; date in soft pink.
+  - Dark glass tiles with a border and glow in each brand's colour; logos glow too. Selected tile lifts with a white border.
+  - Cyan glowing ring shortcuts in the top-right corner.
+- Font: Rajdhani SemiBold (bundled, SIL OFL) for the clock, date and labels; fixed digit slots sized to its widest digit so the time never shifts.
+- Clock lowered towards the centre and slightly smaller; tiles 15 % smaller; every label centred under its tile.
+- "Prime Video" label shortened to "Prime".
+- Replaced `scripts/screenshot.ps1` with `scripts/render-screenshot.ps1`: the TV's web engine doesn't answer DevTools screenshot requests, so the app is rendered at 1920×1080 in headless Edge instead.
+- README shows a screenshot.
+
 ## 0.4.0 — 2026-10-28
 
 - New "dock" design: large clock with seconds (fixed-width digits, nothing shifts), low-poly white-and-gold background drawn once on a canvas.
