@@ -8,16 +8,6 @@ Built for and tested on a **Samsung UE50AU7022KXXH** (2021 Crystal UHD, Tizen 6.
 
 <sub>Rendered at the TV's 1920×1080.</sub>
 
-## Features
-
-- A dock of five platform tiles — YouTube, Twitch, Netflix, Disney+, Prime — under a large clock with seconds and the date.
-- Three small shortcuts in the top-right corner: Internet, Settings, Samsung Home.
-- Cyberpunk look made for a dark room: neon pink/cyan clock (Rajdhani), glowing outline tiles in each brand's colour, and a near-black circuit-board background with traces along the side edges and scattered dark hexagons.
-- Remote-friendly: arrows + OK (▲ ▼ switch between dock and shortcuts), or number keys **1–5** (platforms) and **6–8** (shortcuts).
-- Light on the TV's slow processor: app IDs are pre-verified (no slow app scan), the background is drawn once onto a canvas, and the clock only repaints the digits that change.
-- **Blue** button opens a diagnostics page (log + lifecycle history that survives restarts).
-- No Samsung account, no network calls, no tracking — fonts and logos are bundled. Nothing on the TV is modified.
-
 ## Requirements
 
 - Samsung Tizen TV in **Developer Mode**, with *Host PC IP* set to your PC.
@@ -34,15 +24,7 @@ Built for and tested on a **Samsung UE50AU7022KXXH** (2021 Crystal UHD, Tizen 6.
 
    Run it again after any change to update the app on the TV.
 
-## Uninstall
-
-```powershell
-.\scripts\uninstall.ps1
-```
-
-Or on the TV: **Apps → Start → Delete**.
-
-To also undo the setup, switch Developer Mode off on the TV (Apps → **123** pad → `12345` → **Off** → restart the TV) and uninstall Tizen Studio from the PC.
+**To uninstall**, run `.\scripts\uninstall.ps1`, or on the TV go to **Apps → Start → Delete**. To also undo the setup, switch Developer Mode off on the TV (Apps → **123** pad → `12345` → **Off** → restart the TV) and uninstall Tizen Studio from the PC.
 
 ## Customising tiles
 
