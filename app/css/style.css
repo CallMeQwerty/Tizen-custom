@@ -3,99 +3,233 @@ html, body {
   width: 1920px;
   height: 1080px;
   overflow: hidden;
-  background: #0d0f14;
-  color: #e9edf3;
+  background: #ffffff;
+  color: #1d2230;
   font-family: 'SamsungOne', 'Samsung Sans', 'Tizen Sans', Arial, sans-serif;
 }
 
-header {
+#bg {
   position: absolute;
-  top: 70px;
-  left: 120px;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
 }
 
+/* ---- clock --------------------------------------------------------------- */
+
 #clock {
-  font-size: 120px;
+  position: absolute;
+  top: 170px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  will-change: transform; /* own layer: the ticking seconds don't repaint the background */
+}
+
+#time {
+  font-size: 250px;
   font-weight: 300;
-  letter-spacing: 2px;
   line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 4px 0 rgba(255, 255, 255, 0.9), 0 14px 40px rgba(30, 34, 48, 0.16);
+}
+
+#time .dg {
+  display: inline-block;
+  width: 0.6em; /* fixed-width digits: nothing shifts as the time changes */
+  text-align: center;
+}
+
+#time .col {
+  display: inline-block;
+  width: 0.32em;
+  text-align: center;
+  position: relative;
+  top: -0.07em;
+}
+
+#time .sec {
+  color: #b8862b;
 }
 
 #date {
+  margin-top: 28px;
   font-size: 36px;
-  color: #8b93a3;
-  margin-top: 14px;
+  letter-spacing: 4px;
+  color: #6a6f78;
 }
 
-#grid {
+/* ---- dock ---------------------------------------------------------------- */
+
+#dock {
   position: absolute;
-  top: 340px;
-  left: 120px;
-  right: 120px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-gap: 40px;
+  left: 0;
+  right: 0;
+  bottom: 92px;
+  display: flex;
+  justify-content: center;
 }
 
-.tile {
-  position: relative;
-  height: 240px;
+.btn {
+  margin: 0 36px;
+  text-align: center;
+  transition: transform 0.18s ease;
+}
+
+.rim {
+  width: 176px;
+  height: 176px;
+  padding: 7px;
   box-sizing: border-box;
-  padding: 28px 32px;
-  border-radius: 24px;
-  border-left: 10px solid var(--c);
-  background: #1a1e27;
+  border-radius: 50px;
+  background: linear-gradient(145deg, #fff7dc 0%, #e2bb5c 28%, #8f6a1a 52%, #e9c86e 74%, #fff2c4 100%);
+  box-shadow: 0 38px 56px -18px rgba(30, 34, 48, 0.38), 0 10px 16px rgba(30, 34, 48, 0.2);
+}
+
+.face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 44px;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--l) 0%, var(--c) 52%, var(--d) 100%);
+  box-shadow: inset 0 3px 3px rgba(255, 255, 255, 0.6), inset 0 -16px 28px rgba(0, 0, 0, 0.28);
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  transition: transform 0.12s ease, background-color 0.12s ease;
+  align-items: center;
+  justify-content: center;
 }
 
-.tile .num {
+.face::before { /* glass highlight */
+  content: '';
   position: absolute;
-  top: 22px;
-  right: 28px;
-  font-size: 28px;
-  color: #5d6575;
+  left: 8px;
+  right: 8px;
+  top: 6px;
+  height: 48%;
+  border-radius: 36px 36px 50% 50% / 36px 36px 40px 40px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.04));
 }
 
-.tile .label {
-  font-size: 48px;
-  font-weight: 600;
+.face svg {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.35));
 }
 
-.tile .sub {
-  min-height: 30px;
-  margin-top: 6px;
+.face .logo-img {
+  position: relative;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.35));
+}
+
+.face .logo-img.disney {
+  width: 138px;
+  height: 75px;
+}
+
+.face .logo-img.prime {
+  width: 138px;
+  height: 51px;
+}
+
+.btn .cap {
+  margin-top: 32px;
+  font-size: 31px;
+  letter-spacing: 1px;
+  color: #3d424c;
+}
+
+.btn.focus {
+  transform: translateY(-22px) scale(1.12);
+}
+
+.btn.focus .rim {
+  background: linear-gradient(145deg, #ffffff 0%, #f3d27a 30%, #b8862b 55%, #f7dc8c 78%, #ffffff 100%);
+  box-shadow: 0 60px 70px -20px rgba(30, 34, 48, 0.45), 0 0 0 11px rgba(232, 194, 90, 0.35);
+}
+
+.btn.focus .cap {
+  color: #8a6514;
+  font-weight: bold;
+}
+
+/* ---- shortcuts (top right) ----------------------------------------------- */
+
+#shortcuts {
+  position: absolute;
+  top: 60px;
+  right: 100px;
+  display: flex;
+}
+
+.sc {
+  position: relative;
+  margin-left: 34px;
+  transition: transform 0.18s ease;
+}
+
+.sc .ring {
+  width: 90px;
+  height: 90px;
+  padding: 5px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fff7dc, #d4a73c 45%, #8f6a1a 60%, #f3d98a);
+  box-shadow: 0 16px 24px -8px rgba(30, 34, 48, 0.35);
+}
+
+.sc .disc {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff, #eceef1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sc .disc svg {
+  width: 46px;
+  height: 46px;
+}
+
+.sc .cap {
+  position: absolute;
+  top: 108px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-size: 24px;
-  color: #8b93a3;
+  color: #8a6514;
+  font-weight: bold;
+  opacity: 0;
 }
 
-.tile.focus {
-  transform: scale(1.06);
-  background: #262c39;
-  box-shadow: 0 0 0 4px #ffffff;
+.sc.focus {
+  transform: scale(1.15);
 }
 
-footer {
-  position: absolute;
-  left: 120px;
-  right: 120px;
-  bottom: 50px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 26px;
-  color: #5d6575;
+.sc.focus .ring {
+  background: linear-gradient(145deg, #ffffff, #f3d27a 40%, #b8862b 60%, #f7dc8c);
+  box-shadow: 0 22px 30px -10px rgba(30, 34, 48, 0.45), 0 0 0 8px rgba(232, 194, 90, 0.35);
 }
+
+.sc.focus .cap {
+  opacity: 1;
+}
+
+/* ---- toast & diagnostics ------------------------------------------------- */
 
 #toast {
   position: absolute;
-  top: 90px;
-  right: 120px;
+  top: 66px;
+  left: 100px;
   padding: 18px 30px;
-  border-radius: 14px;
-  background: #262c39;
-  font-size: 32px;
+  border-radius: 16px;
+  background: rgba(29, 34, 48, 0.88);
+  color: #ffffff;
+  font-size: 30px;
 }
 
 #diag {
@@ -107,7 +241,8 @@ footer {
   padding: 30px 40px;
   box-sizing: border-box;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.94);
+  background: rgba(13, 15, 20, 0.95);
+  color: #e9edf3;
   overflow: hidden;
 }
 
@@ -117,10 +252,10 @@ footer {
 }
 
 #diag h2 small {
-  font-size: 24px;
-  font-weight: 400;
-  color: #8b93a3;
   margin-left: 20px;
+  font-size: 24px;
+  font-weight: normal;
+  color: #8b93a3;
 }
 
 #diag-text {

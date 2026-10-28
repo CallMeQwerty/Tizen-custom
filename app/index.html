@@ -7,17 +7,16 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header>
-    <div id="clock">--:--</div>
+  <canvas id="bg" width="1920" height="1080"></canvas>
+
+  <nav id="shortcuts"></nav>
+
+  <section id="clock">
+    <div id="time"></div>
     <div id="date"></div>
-  </header>
+  </section>
 
-  <main id="grid"></main>
-
-  <footer>
-    <span>◀ ▶ ▲ ▼ move · OK open · 1–7 quick open · Blue = diagnostics</span>
-    <span id="status"></span>
-  </footer>
+  <main id="dock"></main>
 
   <div id="toast" class="hidden"></div>
 
@@ -26,7 +25,9 @@
     <pre id="diag-text"></pre>
   </section>
 
+  <script src="js/logos.js"></script>
   <script src="js/tiles.js"></script>
+  <script src="js/background.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

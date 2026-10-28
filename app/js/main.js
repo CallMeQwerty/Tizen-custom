@@ -1,18 +1,26 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.3.0';
-  var COLS = 4;
+  var VERSION = '0.4.0';
   var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 10009, BLUE: 406, ESC: 27 };
   var hasTizen = typeof tizen !== 'undefined';
 
-  var grid = document.getElementById('grid');
+  var dockEl = document.getElementById('dock');
+  var shortcutsEl = document.getElementById('shortcuts');
+  var timeEl = document.getElementById('time');
+  var dateEl = document.getElementById('date');
   var toastEl = document.getElementById('toast');
   var diagEl = document.getElementById('diag');
   var diagText = document.getElementById('diag-text');
-  var statusEl = document.getElementById('status');
 
-  var focus = 0;
+  // Two focus rows: the dock (platforms) and the shortcuts in the top-right corner.
+  var rows = {
+    dock: { items: PLATFORMS, els: [], index: 0 },
+    top: { items: SHORTCUTS, els: [], index: 0 }
+  };
+  var row = 'dock';
+
+  var digitEls = [];
   var logLines = [];
   var startedAt = new Date();
   var resumes = 0;
@@ -53,68 +61,99 @@
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
                 'September', 'October', 'November', 'December'];
 
-  function tick() {
-    var d = new Date();
-    document.getElementById('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
-    document.getElementById('date').textContent = DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+  function buildClock() {
+    var html = '';
+    for (var i = 0; i < 6; i++) {
+      if (i === 2 || i === 4) html += '<span class="col' + (i === 4 ? ' sec' : '') + '">:</span>';
+      html += '<span class="dg' + (i >= 4 ? ' sec' : '') + '">0</span>';
+    }
+    timeEl.innerHTML = html;
+    digitEls = timeEl.querySelectorAll('.dg');
   }
 
-  function updateStatus() {
-    statusEl.textContent = 'v' + VERSION + ' · started ' + hhmmss(startedAt) + (resumes ? ' · resumed ' + resumes + '×' : '');
+  // Only touches the digits that changed.
+  function tick() {
+    var d = new Date();
+    var digits = pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+    for (var i = 0; i < 6; i++) {
+      if (digitEls[i].textContent !== digits.charAt(i)) digitEls[i].textContent = digits.charAt(i);
+    }
+    var date = DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+    if (dateEl.textContent !== date) dateEl.textContent = date;
+  }
+
+  // Re-aligns to the start of each second so the seconds never lag.
+  function clockLoop() {
+    tick();
+    setTimeout(clockLoop, 1000 - (Date.now() % 1000) + 10);
   }
 
   // ---- rendering & focus -------------------------------------------------
 
-  function render() {
-    grid.innerHTML = '';
-    TILES.forEach(function (t, i) {
+  function buildDock() {
+    PLATFORMS.forEach(function (p, i) {
       var el = document.createElement('div');
-      el.className = 'tile';
-      el.style.setProperty('--c', t.color);
-      el.innerHTML = '<span class="num"></span><span class="label"></span><span class="sub"></span>';
-      el.querySelector('.num').textContent = String((i + 1) % 10);
-      el.querySelector('.label').textContent = t.label;
-      el.querySelector('.sub').textContent = t.sub || '';
-      el.addEventListener('click', function () { setFocus(i); open(i); });
-      grid.appendChild(el);
+      el.className = 'btn';
+      el.innerHTML = '<div class="rim"><div class="face">' + LOGOS[p.logo] + '</div></div><div class="cap"></div>';
+      var face = el.querySelector('.face');
+      face.style.setProperty('--l', p.face[0]);
+      face.style.setProperty('--c', p.face[1]);
+      face.style.setProperty('--d', p.face[2]);
+      el.querySelector('.cap').textContent = p.label;
+      el.addEventListener('click', function () { focusOn('dock', i); open(p); });
+      dockEl.appendChild(el);
+      rows.dock.els.push(el);
     });
-    setFocus(focus);
   }
 
-  function setFocus(i) {
-    var tiles = grid.children;
-    if (!tiles.length) return;
-    focus = Math.max(0, Math.min(tiles.length - 1, i));
-    for (var k = 0; k < tiles.length; k++) tiles[k].classList.toggle('focus', k === focus);
-    try { localStorage.setItem('focus', String(focus)); } catch (e) { /* storage unavailable */ }
+  function buildShortcuts() {
+    SHORTCUTS.forEach(function (s, i) {
+      var el = document.createElement('div');
+      el.className = 'sc';
+      el.innerHTML = '<div class="ring"><div class="disc">' + LOGOS[s.logo] + '</div></div><div class="cap"></div>';
+      el.querySelector('.cap').textContent = s.label;
+      el.addEventListener('click', function () { focusOn('top', i); open(s); });
+      shortcutsEl.appendChild(el);
+      rows.top.els.push(el);
+    });
   }
 
-  function move(dx, dy) {
-    var next = focus + dx + dy * COLS;
-    if (dx !== 0 && Math.floor(next / COLS) !== Math.floor(focus / COLS)) return;
-    if (next < 0 || next >= TILES.length) return;
-    setFocus(next);
+  function focusOn(name, index) {
+    var r = rows[name];
+    index = Math.max(0, Math.min(r.items.length - 1, index));
+    rows.dock.els.concat(rows.top.els).forEach(function (el) { el.classList.remove('focus'); });
+    row = name;
+    r.index = index;
+    r.els[index].classList.add('focus');
+    try { localStorage.setItem('focus', name + ':' + index); } catch (e) { /* storage unavailable */ }
+  }
+
+  function restoreFocus() {
+    var saved = '';
+    try { saved = localStorage.getItem('focus') || ''; } catch (e) { /* storage unavailable */ }
+    var parts = saved.split(':');
+    if (rows[parts[0]]) focusOn(parts[0], parseInt(parts[1], 10) || 0);
+    else focusOn('dock', 0);
   }
 
   // ---- launching ---------------------------------------------------------
 
-  function open(i) {
-    var t = TILES[i];
-    if (!hasTizen) { toast('Preview: would open ' + t.label); return; }
-    toast('Opening ' + t.label + '…');
-    log('launch ' + t.id);
+  function open(item) {
+    if (!hasTizen) { toast('Preview: would open ' + item.label); return; }
+    toast('Opening ' + item.label + '…');
+    log('launch ' + item.id);
     try {
       tizen.application.launch(
-        t.id,
-        function () { log('launched ' + t.id); },
+        item.id,
+        function () { log('launched ' + item.id); },
         function (err) {
-          log('launch failed ' + t.id + ': ' + err.name + ' ' + err.message);
-          toast('Could not open ' + t.label + ': ' + err.message, 5000);
+          log('launch failed ' + item.id + ': ' + err.name + ' ' + err.message);
+          toast('Could not open ' + item.label + ': ' + err.message, 5000);
         }
       );
     } catch (e) {
-      log('launch threw ' + t.id + ': ' + e.message);
-      toast('Could not open ' + t.label + ': ' + e.message, 5000);
+      log('launch threw ' + item.id + ': ' + e.message);
+      toast('Could not open ' + item.label + ': ' + e.message, 5000);
     }
   }
 
@@ -145,13 +184,14 @@
 
   function registerKeys() {
     if (!hasTizen || !tizen.tvinputdevice) return;
-    ['ColorF3Blue', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].forEach(function (k) {
+    ['ColorF3Blue', '1', '2', '3', '4', '5', '6', '7', '8'].forEach(function (k) {
       try { tizen.tvinputdevice.registerKey(k); } catch (e) { log('registerKey ' + k + ' failed: ' + e.message); }
     });
   }
 
   document.addEventListener('keydown', function (e) {
     var code = e.keyCode;
+    var r = rows[row];
 
     if (diagOpen()) {
       if (code === KEY.BACK || code === KEY.BLUE || code === KEY.ESC) diagEl.classList.add('hidden');
@@ -161,18 +201,22 @@
       return;
     }
 
-    if (code === KEY.LEFT) move(-1, 0);
-    else if (code === KEY.RIGHT) move(1, 0);
-    else if (code === KEY.UP) move(0, -1);
-    else if (code === KEY.DOWN) move(0, 1);
-    else if (code === KEY.ENTER) open(focus);
+    if (code === KEY.LEFT) focusOn(row, r.index - 1);
+    else if (code === KEY.RIGHT) focusOn(row, r.index + 1);
+    else if (code === KEY.UP && row === 'dock') focusOn('top', rows.top.index);
+    else if (code === KEY.DOWN && row === 'top') focusOn('dock', rows.dock.index);
+    else if (code === KEY.ENTER) open(r.items[r.index]);
     else if (code === KEY.BLUE || (!hasTizen && code === 68 /* D in browser preview */)) showDiag();
-    else if (code >= 48 && code <= 57) {
-      var idx = code === 48 ? 9 : code - 49;
-      if (idx < TILES.length) { setFocus(idx); open(idx); }
+    else if (code >= 49 && code <= 56) {
+      var n = code - 49;
+      if (n < PLATFORMS.length) { focusOn('dock', n); open(PLATFORMS[n]); }
+      else if (n - PLATFORMS.length < SHORTCUTS.length) {
+        focusOn('top', n - PLATFORMS.length);
+        open(SHORTCUTS[n - PLATFORMS.length]);
+      }
     }
     else if (code === KEY.BACK) { /* stay on the start screen */ }
-    else return;
+    else if (code !== KEY.UP && code !== KEY.DOWN) return;
     e.preventDefault();
   });
 
@@ -182,17 +226,17 @@
     log('resumed');
     remember('resumed');
     tick();
-    updateStatus();
   });
 
   // ---- boot --------------------------------------------------------------
 
-  try { focus = parseInt(localStorage.getItem('focus') || '0', 10) || 0; } catch (e) { focus = 0; }
   log('start v' + VERSION + ' (' + (hasTizen ? 'TV' : 'browser') + ')');
   remember('start v' + VERSION);
+  drawBackground(document.getElementById('bg'), 7);
+  buildClock();
+  buildDock();
+  buildShortcuts();
+  restoreFocus();
   registerKeys();
-  tick();
-  setInterval(tick, 10000);
-  updateStatus();
-  render();
+  clockLoop();
 })();

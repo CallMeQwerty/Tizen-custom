@@ -1,13 +1,18 @@
-// Tiles shown on the start screen, in order (number keys 1–9 open them directly).
-// App IDs verified on this TV (UE50AU7022, Tizen 6.0) on 2026-10-28.
-// Tried and dropped (launch accepted, nothing shown): com.samsung.tv.coba.setting,
-// com.samsung.tv.coba.source, com.samsung.tv.mycontents; org.tizen.tv-viewer closes this app.
-var TILES = [
-  { label: 'YouTube',      color: '#e62117', id: '9Ur5IzDKqV.TizenYouTube' },
-  { label: 'Netflix',      color: '#e50914', id: 'org.tizen.netflix-app' },
-  { label: 'Prime Video',  color: '#1a98ff', id: 'org.tizen.primevideo' },
-  { label: 'Disney+',      color: '#1f4fd1', id: 'MCmYXNxgcu.DisneyPlus' },
-  { label: 'Internet',     color: '#7b61ff', id: 'org.tizen.browser' },
-  { label: 'Settings',     color: '#8b93a3', id: 'org.tizen.menu' },
-  { label: 'Samsung Home', color: '#3d4454', id: 'com.samsung.tv.csfs', sub: 'apps · sources · USB' }
+// What the start screen shows. App IDs verified on a UE50AU7022 (Tizen 6.0).
+// Find IDs for other apps with scripts/list-apps.ps1.
+
+// The dock: number keys 1-5, in this order. `face` = top / middle / bottom colour of the button.
+var PLATFORMS = [
+  { label: 'YouTube',     logo: 'youtube', id: '9Ur5IzDKqV.TizenYouTube', face: ['#ff4d64', '#e8102e', '#9e0019'] },
+  { label: 'Twitch',      logo: 'twitch',  id: 'Jz7aUrV2Q4.Twitch',       face: ['#b48bff', '#9146ff', '#5a24b8'] },
+  { label: 'Netflix',     logo: 'netflix', id: 'org.tizen.netflix-app',   face: ['#3a3a3a', '#161616', '#000000'] },
+  { label: 'Disney+',     logo: 'disney',  id: 'MCmYXNxgcu.DisneyPlus',   face: ['#3a63e0', '#13308f', '#06174f'] },
+  { label: 'Prime Video', logo: 'prime',   id: 'org.tizen.primevideo',    face: ['#2c4157', '#1a2a3a', '#0b141e'] }
+];
+
+// Small round buttons in the top-right corner: number keys 6-8.
+var SHORTCUTS = [
+  { label: 'Internet',     logo: 'globe', id: 'org.tizen.browser' },
+  { label: 'Settings',     logo: 'gear',  id: 'org.tizen.menu' },
+  { label: 'Samsung Home', logo: 'home',  id: 'com.samsung.tv.csfs' }
 ];
