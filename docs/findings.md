@@ -14,6 +14,7 @@ Launched with `tizen.application.launch(id)` from this app:
 | Tile | App ID | Result |
 |---|---|---|
 | YouTube | `9Ur5IzDKqV.TizenYouTube` | ✅ opens |
+| Twitch | `Jz7aUrV2Q4.Twitch` | ✅ |
 | Netflix | `org.tizen.netflix-app` | ✅ |
 | Prime Video | `org.tizen.primevideo` | ✅ |
 | Disney+ | `MCmYXNxgcu.DisneyPlus` | ✅ |

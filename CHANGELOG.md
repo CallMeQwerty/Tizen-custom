@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-10-28
+
+- New "dock" design: large clock with seconds (fixed-width digits, nothing shifts), low-poly white-and-gold background drawn once on a canvas.
+- Realistic platform buttons: brushed-gold rim, glass highlight, soft shadow; selected button lifts with a gold label.
+- Platforms: YouTube, Twitch (new), Netflix, Disney+, Prime Video — keys 1–5.
+- Internet, Settings and Samsung Home moved to small round shortcuts in the top-right corner — keys 6–8, ▲ ▼ to reach them.
+- Official Disney+ and Prime Video wordmarks as SVG files (`app/img/`).
+- `scripts/screenshot.ps1`: capture what the app renders on the TV.
+
 ## 0.3.0 — 2026-10-28
 
 - Seven verified tiles: YouTube, Netflix, Prime Video, Disney+, Internet, Settings (`org.tizen.menu`), Samsung Home.
