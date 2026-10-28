@@ -1,0 +1,136 @@
+html, body {
+  margin: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: #0d0f14;
+  color: #e9edf3;
+  font-family: 'SamsungOne', 'Samsung Sans', 'Tizen Sans', Arial, sans-serif;
+}
+
+header {
+  position: absolute;
+  top: 70px;
+  left: 120px;
+}
+
+#clock {
+  font-size: 120px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+#date {
+  font-size: 36px;
+  color: #8b93a3;
+  margin-top: 14px;
+}
+
+#grid {
+  position: absolute;
+  top: 340px;
+  left: 120px;
+  right: 120px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 40px;
+}
+
+.tile {
+  position: relative;
+  height: 240px;
+  box-sizing: border-box;
+  padding: 28px 32px;
+  border-radius: 24px;
+  border-left: 10px solid var(--c);
+  background: #1a1e27;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.tile .num {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  font-size: 28px;
+  color: #5d6575;
+}
+
+.tile .label {
+  font-size: 48px;
+  font-weight: 600;
+}
+
+.tile .sub {
+  min-height: 30px;
+  margin-top: 6px;
+  font-size: 24px;
+  color: #8b93a3;
+}
+
+.tile.focus {
+  transform: scale(1.06);
+  background: #262c39;
+  box-shadow: 0 0 0 4px #ffffff;
+}
+
+footer {
+  position: absolute;
+  left: 120px;
+  right: 120px;
+  bottom: 50px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 26px;
+  color: #5d6575;
+}
+
+#toast {
+  position: absolute;
+  top: 90px;
+  right: 120px;
+  padding: 18px 30px;
+  border-radius: 14px;
+  background: #262c39;
+  font-size: 32px;
+}
+
+#diag {
+  position: absolute;
+  top: 60px;
+  left: 60px;
+  right: 60px;
+  bottom: 60px;
+  padding: 30px 40px;
+  box-sizing: border-box;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.94);
+  overflow: hidden;
+}
+
+#diag h2 {
+  margin: 0 0 20px;
+  font-size: 40px;
+}
+
+#diag h2 small {
+  font-size: 24px;
+  font-weight: 400;
+  color: #8b93a3;
+  margin-left: 20px;
+}
+
+#diag-text {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  color: #c9d1dd;
+}
+
+.hidden {
+  display: none !important;
+}
